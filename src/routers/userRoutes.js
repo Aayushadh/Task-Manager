@@ -1,15 +1,19 @@
 const express=require('express');
 const user=require('../models/user');
+const auth = require("../middleware/auth");
 
+const app1 = express();
+app1.use(express.json())
 const app=new express.Router();
 
-app.post("/user", async (req, res) => {
+app.post("/user",async (req, res) => {
 
     const obj = new user.User(req.body);
     try {
-
+        const token=await obj.generateAuthToken();
+        const user2=await obj.toJSON();
         await obj.save();
-        res.status(201).send(obj);
+        res.status(201).send({user:user2,token});
     } catch (e) {
         console.log(e);
         res.status(400).send(e);
@@ -17,19 +21,40 @@ app.post("/user", async (req, res) => {
 
 });
 
-app.get("/user", async (req, res) => {
-
-    try {
-
-        const users = await user.User.find({});
-        res.status(200).send(users);
-
-    } catch (e) {
-        res.status(500).send(e);
-    }
+app.get("/user/me",auth,async (req, res) => {
+    
+    const user2=await req.user.toJSON();
+    res.send({user:user2});
 
 
 });
+
+app.get("/user/logout",auth,async(req,res)=>{
+    try{
+        req.user.tokens=req.user.tokens.filter((token)=>{
+            return req.token!=token.token;
+        })
+
+       await req.user.save();
+       res.send();
+
+    }catch{
+        res.status(500).send();
+
+    }
+})
+app.get("/user/logoutAll",auth,async(req,res)=>{
+    try{
+        req.user.tokens=[]
+
+       await req.user.save();
+       res.send();
+
+    }catch{
+        res.status(500).send();
+
+    }
+})
 
 app.get("/user/:id", async (req, res) => {
 
@@ -41,7 +66,7 @@ app.get("/user/:id", async (req, res) => {
         }
         res.status(200).send(user1);
     } catch (e) {
-        res.status(500).send(e);
+        res.status(400).send(e);
     }
 });
 app.patch("/user/:id", async (req, res) => {
@@ -65,7 +90,7 @@ app.patch("/user/:id", async (req, res) => {
 
         res.status(200).send(user1);
     } catch (e) {
-        res.status(500).send(e);
+        res.status(400).send(e);
     }
 });
 
@@ -79,8 +104,24 @@ app.delete("/user/:id", async (req, res) => {
         }
         res.status(200).send(user1);
     } catch (e) {
-        res.status(500).send(e);
+        res.status(400).send(e);
     }
+});
+
+app.post("/user/login",async(req,res)=>{
+     
+     try{
+         const user1=await user.User.findByCredentials(req.body.email,req.body.password);
+         const token =await user1.generateAuthToken();
+         const user2=await user1.toJSON();
+         res.send({user:user2,token});
+
+     }catch(e){
+         console.log(e);
+        res.status(400).send(e);
+
+     }
+     
 });
 
 module.exports=app;
