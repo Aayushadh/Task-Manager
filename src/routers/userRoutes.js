@@ -1,19 +1,22 @@
-const express=require('express');
-const user=require('../models/user');
+const express = require('express');
+const user = require('../models/user');
+
+// importing middleware
 const auth = require("../middleware/auth");
 
-const app1 = express();
-app1.use(express.json())
-const app=new express.Router();
+const app = new express.Router();
 
-app.post("/user",async (req, res) => {
+app.post("/user", async (req, res) => {
 
     const obj = new user.User(req.body);
     try {
-        const token=await obj.generateAuthToken();
-        const user2=await obj.toJSON();
+        const token = await obj.generateAuthToken();
+       
         await obj.save();
-        res.status(201).send({user:user2,token});
+        res.status(201).send({
+            user: obj,
+            token
+        });
     } catch (e) {
         console.log(e);
         res.status(400).send(e);
@@ -21,36 +24,39 @@ app.post("/user",async (req, res) => {
 
 });
 
-app.get("/user/me",auth,async (req, res) => {
-    
-    const user2=await req.user.toJSON();
-    res.send({user:user2});
+app.get("/user/me", auth, async (req, res) => {
+
+    const user2 = await req.user.toJSON();
+    res.send({
+        user: user2
+    });
 
 
 });
 
-app.get("/user/logout",auth,async(req,res)=>{
-    try{
-        req.user.tokens=req.user.tokens.filter((token)=>{
-            return req.token!=token.token;
+app.get("/user/logout", auth, async (req, res) => {
+    try {
+        req.user.tokens = req.user.tokens.filter((token) => {
+            return req.token != token.token;
         })
 
-       await req.user.save();
-       res.send();
+        await req.user.save();
+        res.send();
 
-    }catch{
+    } catch {
         res.status(500).send();
 
     }
-})
-app.get("/user/logoutAll",auth,async(req,res)=>{
-    try{
-        req.user.tokens=[]
+});
 
-       await req.user.save();
-       res.send();
+app.get("/user/logoutAll", auth, async (req, res) => {
+    try {
+        req.user.tokens = []
 
-    }catch{
+        await req.user.save();
+        res.send();
+
+    } catch {
         res.status(500).send();
 
     }
@@ -69,6 +75,7 @@ app.get("/user/:id", async (req, res) => {
         res.status(400).send(e);
     }
 });
+
 app.patch("/user/:id", async (req, res) => {
 
     const _id = req.params.id;
@@ -82,9 +89,9 @@ app.patch("/user/:id", async (req, res) => {
         })
     }
     try {
-        
+
         const user1 = await user.User.findByIdAndUpdate(_id);
-        updates.forEach((update)=>user1[update]=req.body[update]);
+        updates.forEach((update) => user1[update] = req.body[update]);
 
         await user1.save();
 
@@ -108,20 +115,23 @@ app.delete("/user/:id", async (req, res) => {
     }
 });
 
-app.post("/user/login",async(req,res)=>{
-     
-     try{
-         const user1=await user.User.findByCredentials(req.body.email,req.body.password);
-         const token =await user1.generateAuthToken();
-         const user2=await user1.toJSON();
-         res.send({user:user2,token});
+app.post("/user/login", async (req, res) => {
 
-     }catch(e){
-         console.log(e);
+    try {
+        const user1 = await user.User.findByCredentials(req.body.email, req.body.password);
+        const token = await user1.generateAuthToken();
+      //  console.log(user1);
+       // const user2 = await user1.toJSON();
+        res.send({
+            user:  user1,
+            token
+        });
+
+    } catch (e) {
         res.status(400).send(e);
 
-     }
-     
+    }
+
 });
 
-module.exports=app;
+module.exports = app;
