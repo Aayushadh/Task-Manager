@@ -1,12 +1,16 @@
 const express = require('express');
 const task = require('../models/task');
+const auth = require('../middleware/auth');
 
 
 const app = new express.Router();
 
-app.post("/task", async (req, res) => {
+app.post("/task", auth, async (req, res) => {
 
-    const obj = new task.Task(req.body);
+    const obj = new task.Task({
+        ...req.body,
+        ownerid: req.user._id
+    });
     try {
         await obj.save();
         console.log(obj);
@@ -18,10 +22,12 @@ app.post("/task", async (req, res) => {
 
 });
 
-app.get("/task", async (req, res) => {
+app.get("/task", auth, async (req, res) => {
 
     try {
-        const tasks = await task.Task.find({});
+        const tasks = await task.Task.find({
+            ownerid: req.user._id
+        });
         res.status(200).send(tasks);
     } catch (e) {
         res.status(500).send(e);
@@ -29,11 +35,14 @@ app.get("/task", async (req, res) => {
 
 });
 
-app.get("/task/:id", async (req, res) => {
+app.get("/task/:id", auth, async (req, res) => {
 
     const _id = req.params.id;
     try {
-        const obj = await task.Task.findById(_id);
+        const obj = await task.Task.findOne({
+            _id,
+            ownerid: req.user._id
+        });
         if (!obj) {
             return res.status(404).send("NOT Found");
         }
@@ -44,7 +53,7 @@ app.get("/task/:id", async (req, res) => {
 
 
 });
-app.patch("/task/:id", async (req, res) => {
+app.patch("/task/:id", auth, async (req, res) => {
 
     const _id = req.params.id;
     const fields = ["description", "completed"];
@@ -57,15 +66,18 @@ app.patch("/task/:id", async (req, res) => {
     }
 
     try {
-        const updates=Object.keys(req.body);
-        const obj = await task.Task.findByIdAndUpdate(_id);
+        const updates = Object.keys(req.body);
+        const obj = await task.Task.findOne({
+            _id,
+            ownerid: req.user._id
+        });
 
         if (!obj) {
             return res.status(404).send("NOT Found");
         }
 
-        updates.forEach((update)=>{
-            obj[update]=req.body[update];
+        updates.forEach((update) => {
+            obj[update] = req.body[update];
         });
 
         await obj.save();
@@ -78,11 +90,14 @@ app.patch("/task/:id", async (req, res) => {
 
 });
 
-app.delete("/task/:id", async (req, res) => {
+app.delete("/task/:id", auth, async (req, res) => {
 
     const _id = req.params.id;
     try {
-        const obj = await task.Task.findByIdAndDelete(_id);
+        const obj = await task.Task.findOneAndDelete({
+            _id,
+            ownerid: req.user._id
+        });
         if (!obj) {
             return res.status(404).send("NOT Found");
         }

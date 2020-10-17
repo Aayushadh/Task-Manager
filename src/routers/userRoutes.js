@@ -11,7 +11,7 @@ app.post("/user", async (req, res) => {
     const obj = new user.User(req.body);
     try {
         const token = await obj.generateAuthToken();
-       
+
         await obj.save();
         res.status(201).send({
             user: obj,
@@ -76,9 +76,9 @@ app.get("/user/:id", async (req, res) => {
     }
 });
 
-app.patch("/user/:id", async (req, res) => {
+app.patch("/user/me", auth, async (req, res) => {
 
-    const _id = req.params.id;
+    const _id = req.user.id;
     const fields = ["name", "password", "age"];
     const updates = Object.keys(req.body);
     const isValid = updates.every((inst) => fields.includes(inst));
@@ -101,15 +101,12 @@ app.patch("/user/:id", async (req, res) => {
     }
 });
 
-app.delete("/user/:id", async (req, res) => {
+app.delete("/user/me", auth, async (req, res) => {
 
     const _id = req.params.id;
     try {
-        const user1 = await user.User.findByIdAndDelete(_id);
-        if (!user1) {
-            return res.status(404).send("Not Found");
-        }
-        res.status(200).send(user1);
+        await req.user.remove();
+        res.send(req.user);
     } catch (e) {
         res.status(400).send(e);
     }
@@ -120,10 +117,10 @@ app.post("/user/login", async (req, res) => {
     try {
         const user1 = await user.User.findByCredentials(req.body.email, req.body.password);
         const token = await user1.generateAuthToken();
-      //  console.log(user1);
-       // const user2 = await user1.toJSON();
+        //  console.log(user1);
+        // const user2 = await user1.toJSON();
         res.send({
-            user:  user1,
+            user: user1,
             token
         });
 
