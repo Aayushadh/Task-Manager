@@ -1,6 +1,7 @@
 require("./db/mongoose");
 
 const express = require("express")
+const multer = require("multer");
 
 const user = require("./models/user");
 const task = require("./models/task");
@@ -15,11 +16,12 @@ const port = process.env.PORT || 3000
 
 const app = express();
 
-app.use(express.json())
-
+app.use(express.json());
 
 app.use(userRoutes);
 app.use(taskRoutes);
+
+
 
 app.listen(port, () => {
     console.log("Successfully running.........")
