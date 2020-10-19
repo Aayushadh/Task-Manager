@@ -12,7 +12,7 @@ const taskRoutes = require("./routers/taskRoutes")
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT
 
 const app = express();
 
@@ -24,5 +24,5 @@ app.use(taskRoutes);
 
 
 app.listen(port, () => {
-    console.log("Successfully running.........")
+    console.log("Successfully running..." + port)
 })

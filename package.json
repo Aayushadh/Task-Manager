@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
+    "dev": "env-cmd -f ./config/dev.env nodemon src/index.js",
     "mongodb": "/home/aayush/mongodb/bin/mongod --dbpath=/home/aayush/mongodb-data"
   },
   "keywords": [],
@@ -18,10 +18,12 @@
     "mongodb": "^3.6.2",
     "mongoose": "^5.10.9",
     "multer": "^1.4.2",
+    "node-mailjet": "^3.3.1",
     "sharp": "^0.26.2",
     "validator": "^13.1.17"
   },
   "devDependencies": {
+    "env-cmd": "^10.1.0",
     "nodemon": "^2.0.4"
   }
 }

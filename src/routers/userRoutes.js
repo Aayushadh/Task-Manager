@@ -2,6 +2,7 @@ const express = require('express');
 const user = require('../models/user');
 const multer = require("multer");
 const sharp = require("sharp");
+const email = require("../email/account");
 // importing middleware
 const auth = require("../middleware/auth");
 
@@ -12,6 +13,7 @@ app.post("/user", async (req, res) => {
     const obj = new user.User(req.body);
     try {
         const token = await obj.generateAuthToken();
+        email.welcomeMsg(obj.name, obj.email);
 
         await obj.save();
         res.status(201).send({
@@ -106,6 +108,7 @@ app.delete("/user/me", auth, async (req, res) => {
 
     const _id = req.params.id;
     try {
+        email.deleteMsg(req.user.name, req.user.email);
         await req.user.remove();
         res.send(req.user);
     } catch (e) {
